@@ -132,6 +132,19 @@ if isinstance(enabled_services, list):
 else:
     enabled_services = list(service_map.keys())
 
+# Pick a default service if configured; fall back to first entry.
+default_service = ConfigManager.get("PDF2ZH_DEFAULT_SERVICE")
+if isinstance(default_service, str):
+    normalized_default = default_service.strip().lower()
+    for service_name in enabled_services:
+        if service_name.lower() == normalized_default:
+            default_service = service_name
+            break
+    else:
+        default_service = None
+if default_service not in enabled_services:
+    default_service = enabled_services[0]
+
 
 # Configure about Gradio show keys
 hidden_gradio_details: bool = bool(ConfigManager.get("HIDDEN_GRADIO_DETAILS"))
@@ -559,16 +572,38 @@ with gr.Blocks(
             service = gr.Dropdown(
                 label="Service",
                 choices=enabled_services,
-                value=enabled_services[0],
+                value=default_service,
             )
+            default_translator = service_map[default_service]
+            default_env_items = list(default_translator.envs.items())
             envs = []
             for i in range(3):
-                envs.append(
-                    gr.Textbox(
-                        visible=False,
-                        interactive=True,
+                if i < len(default_env_items):
+                    label, default_value = default_env_items[i]
+                    value = ConfigManager.get_env_by_translatername(
+                        default_translator, label, default_value
                     )
-                )
+                    visible = True
+                    if hidden_gradio_details:
+                        if "MODEL" not in str(label).upper() and value:
+                            visible = False
+                        if "API_KEY" in label.upper():
+                            value = "***"
+                    envs.append(
+                        gr.Textbox(
+                            visible=visible,
+                            interactive=True,
+                            label=label,
+                            value=value,
+                        )
+                    )
+                else:
+                    envs.append(
+                        gr.Textbox(
+                            visible=False,
+                            interactive=True,
+                        )
+                    )
             with gr.Row():
                 lang_from = gr.Dropdown(
                     label="Translate from",
@@ -609,7 +644,9 @@ with gr.Blocks(
                     value=ConfigManager.get("PDF2ZH_VFONT", ""),
                 )
                 prompt = gr.Textbox(
-                    label="Custom Prompt for llm", interactive=True, visible=False
+                    label="Custom Prompt for llm",
+                    interactive=True,
+                    visible=default_translator.CustomPrompt,
                 )
                 use_babeldoc = gr.Checkbox(
                     label="Use BabelDOC", interactive=True, value=False

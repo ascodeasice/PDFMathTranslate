@@ -38,6 +38,15 @@ services:
       - PYTHONUNBUFFERED=1
       # The UV_LINK_MODE warning happens during build, so we can set it there if needed,
       # but it's generally harmless.
+      - PDF2ZH_DEFAULT_SERVICE=${PDF2ZH_DEFAULT_SERVICE:-openai-liked}
+      - PDF2ZH_LANG_FROM=${PDF2ZH_LANG_FROM:-English}
+      - PDF2ZH_LANG_TO=${PDF2ZH_LANG_TO:-Traditional Chinese}
+      - OPENAILIKED_BASE_URL=${OPENAILIKED_BASE_URL:-https://litellm.netdb.csie.ncku.edu.tw/}
+      - OPENAILIKED_API_KEY=${OPENAILIKED_API_KEY:-sk-something}
+      - OPENAILIKED_MODEL=${OPENAILIKED_MODEL:-gemini/gemini-2.0-flash-lite}
+
+    env_file:
+      - .env
 
     command: ["pdf2zh", "-i"]
 

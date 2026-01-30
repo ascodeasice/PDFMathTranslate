@@ -12,6 +12,7 @@ This subfolder provides the GUI mode of `pdf2zh`.
 
 You can set the source and target languages using environment variables:
 
+- `PDF2ZH_DEFAULT_SERVICE`: Sets the default translation service (case-insensitive, e.g. `openai-liked` or `OpenAI-liked`).
 - `PDF2ZH_LANG_FROM`: Sets the source language. Defaults to "English".
 - `PDF2ZH_LANG_TO`: Sets the target language. Defaults to "Simplified Chinese".
 

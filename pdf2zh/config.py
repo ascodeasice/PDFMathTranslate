@@ -155,6 +155,27 @@ class ConfigManager:
     def get_env_by_translatername(cls, translater_name, name, default=None):
         """根据 name 获取对应的 translator 配置"""
         instance = cls.get_instance()
+        if name in os.environ:
+            value = os.environ[name]
+            with instance._lock:
+                translators = instance._config_data.get("translators", [])
+                for translator in translators:
+                    if translator.get("name") == translater_name.name:
+                        translator.setdefault("envs", {})[name] = value
+                        instance._save_config()
+                        return value
+                translators.append(
+                    {
+                        "name": translater_name.name,
+                        "envs": {
+                            **copy.deepcopy(translater_name.envs),
+                            name: value,
+                        },
+                    }
+                )
+                instance._config_data["translators"] = translators
+                instance._save_config()
+                return value
         translators = instance._config_data.get("translators", [])
         for translator in translators:
             if translator.get("name") == translater_name.name:
